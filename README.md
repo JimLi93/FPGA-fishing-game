@@ -5,7 +5,7 @@
 The game is inspired by the fishing mini-game in Mole's World. This project is to recreate the game as faithfully as possible. 
 The entire gameplay is controlled by the mouse and displayed through VGA on the screen. 
 
-## Hardware and Software
+## Software and Hardware
 
 ### Software
 
