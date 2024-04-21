@@ -3,6 +3,7 @@ module one_second (
     input rst,
     input pause,
     input state,
+    output half_second,
     output one_second_enable
 );
     reg [27:0] cnt;
@@ -33,5 +34,6 @@ module one_second (
     end
 
     assign one_second_enable = (cnt >= 99999999) ? 1'b1 : 1'b0;
+    assign half_second = (cnt == 99999999 || cnt == 49999999) ? 1'b1 : 1'b0;
 
 endmodule

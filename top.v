@@ -35,7 +35,7 @@ module final (
 );
 
     parameter total_time = 300;
-
+    parameter  [3:0] shark_way_array = 4'b0110;
     parameter  [7:0] fish_way = 8'b10110010;
     parameter  [7:0] fish_way1 = 8'b10110010;
     parameter  [7:0] fish_way2 = 8'b01001101;
@@ -53,6 +53,9 @@ module final (
     parameter [9:0] fast_appear_v [0:3] = {
         10'd360, 10'd310, 10'd410, 10'd260
     };
+    parameter [9:0] shark_appear_v [0:3] = {
+        10'd300, 10'd380, 10'd300, 10'd380
+    };
 
 
     wire [11:0] data;
@@ -67,36 +70,7 @@ module final (
     reg [13:0] h_position = 3200;
     reg [13:0] v_position = 2400;
 
-    //for one second
-    wire pause;
-    wire state;
-    assign pause = enable[1];
-    assign state = enable[2];
-    wire one_second_enable;
-
-    one_second sc1(clk, rst, pause, state, one_second_enable);
-
-
-    reg [9:0] playtime;
-    reg [5:0] score = 0;
-
-    always @(posedge clk, posedge rst) begin
-        if(rst == 1'b1) begin
-            playtime = 0;
-        end
-        else if(state == 1'b0) begin
-            playtime = 0;
-        end
-        else if(pause == 1'b0 && one_second_enable == 1'b1) begin
-            if(playtime == 500) begin
-                playtime = 0;
-            end
-            else begin
-                playtime = playtime + 1;
-            end
-        end
-    end
-
+    
     reg [9:0] p_reg;  
     wire [9:0] p_next;
     reg [9:0] q_reg;  
@@ -111,34 +85,18 @@ module final (
     reg [3:0] seg;
     reg [1:0] stage = 0;
 
+    //for one second
+    wire pause;
+    wire state_tmp;
+    assign pause = enable[1];
+    assign state_tmp = enable[2];
+    wire one_second_enable;
+    wire half_second_enable;
 
+    reg [1:0] state, next_state; //0 for open scene 1 for playing scene 2 for shark end scene
+    reg bite = 0;
 
-    clock_divide #(13) div0(.clk(clk),.clk_div(clk_div));
-    clock_divide #(2) div1(clk, clk_25MHz);
-    clock_divide #(21) div21(clk, clk_21);
-    clock_divide #(20) div20(clk, clk_20);
-    clock_divide #(19) div19(clk, clk_19);
-
-    //fast (fish)
-    reg fast_appear = 0;
-    reg [9:0] fast_h_position = 0;
-    reg [9:0] fast_v_position = 0;
-    reg fast_way = 0;
-    reg [1:0] fast_movetype = 0;
-    reg stolen = 0;
-    reg fast_reach_top = 0;
-
-    reg n_fast_appear = 0;
-    reg [9:0] n_fast_h_position = 0;
-    reg [9:0] n_fast_v_position = 0;
-    reg n_fast_way = 0;
-    reg [1:0] n_fast_movetype = 0;
-    reg n_stolen = 0;
-    reg n_fast_reach_top = 0;
-    //get fish color
-    wire [11:0] fast_color;
-    wire fast_back; // 1 for print background 0 for print fish
-    
+    reg [2:0] state2_cnt, n_state2_cnt;
 
     reg [23:0] cnt1; //for fish1
 
@@ -168,9 +126,136 @@ module final (
         end
     end
 
+    reg [27:0] cnt3; //for mouth
+
+    always @(posedge clk, posedge rst) begin
+        if(rst == 1'b1) begin
+            cnt3 = 0;
+        end
+        else if(state == 2'b10) begin
+            if(cnt3 == 25000000) begin
+                cnt3 = 0;
+            end
+            else begin
+                cnt3 = cnt3 + 1;
+            end
+        end
+        else begin
+            cnt3 = 0;
+        end
+    end
+
+
+
+    always @(posedge clk, posedge rst) begin
+        if(rst == 1'b1) begin
+            state <= 0;
+        end
+        else begin
+            state <= next_state;
+        end
+    end
+
+    always @(*) begin
+        next_state = state;
+        if(state == 2'b00) begin
+            if(btnm[0] == 1'b1 && (v_position / 10) >= 335 && (v_position / 10) <= 374 && (h_position / 10) >= 290 && (h_position / 10) <= 349 && play_back == 1'b0) begin
+                next_state = 2'b01;
+            end
+        end
+        else if(state == 2'b01) begin
+            if(bite == 1'b1) begin
+                next_state = 2'b10;
+            end
+        end
+        else if(state == 2'b10) begin
+            if(state2_cnt == 7) begin
+                next_state = 2'b11;
+            end
+        end
+        else if(state == 2'b11) begin
+            if(btnm[0] == 1'b1 && (v_position / 10) >= 340 && (v_position / 10) <= 369 && (h_position / 10) >= 308 && (h_position / 10) <= 331 && reverse_back == 1'b0) begin
+                next_state = 2'b01;
+            end
+        end
+    end
+
+    always @(posedge clk, posedge rst) begin
+        if(rst == 1'b1) begin
+            state2_cnt <= 0;
+        end
+        else begin
+            state2_cnt <= n_state2_cnt;
+        end
+    end
+
+    always @(*) begin
+        if(state == 2'b10) begin
+            if(cnt3 == 25000000) begin
+                n_state2_cnt = state2_cnt + 1;
+            end
+            else begin
+                n_state2_cnt = state2_cnt;
+            end
+        end
+        else begin
+            n_state2_cnt = 0;
+        end
+    end
+
+    one_second sc1(clk, rst, pause, state_tmp, half_second_enable, one_second_enable);
+
+
+    reg [9:0] playtime;
+    reg [5:0] score = 0;
+
+    always @(posedge clk, posedge rst) begin
+        if(rst == 1'b1) begin
+            playtime = 0;
+        end
+        else if(state_tmp == 1'b0) begin
+            playtime = 0;
+        end
+        else if(pause == 1'b0 && one_second_enable == 1'b1) begin
+            if(playtime == 500) begin
+                playtime = 0;
+            end
+            else begin
+                playtime = playtime + 1;
+            end
+        end
+    end
 
 
     
+
+
+
+    clock_divide #(13) div0(.clk(clk),.clk_div(clk_div));
+    clock_divide #(2) div1(clk, clk_25MHz);
+    clock_divide #(21) div21(clk, clk_21);
+    clock_divide #(20) div20(clk, clk_20);
+    clock_divide #(19) div19(clk, clk_19);
+
+
+
+    //shark
+    reg shark_appear = 0;
+    reg [9:0] shark_h_position = 0;
+    reg [9:0] shark_v_position = 0;
+    reg shark_way = 0;
+    reg [1:0] shark_movetype = 0;
+
+    reg n_shark_appear = 0;
+    reg [9:0] n_shark_h_position = 0;
+    reg [9:0] n_shark_v_position = 0;
+    reg n_shark_way = 0;
+    reg [1:0] n_shark_movetype = 0;
+    //get fish color
+    wire [11:0] shark_color;
+    wire shark_back; // 1 for print background 0 for print fish
+    
+
 
     wire [11:0] bait_color;
     wire bait_back; // 1 for print background 0 for print fish
@@ -197,10 +282,7 @@ module final (
             end
         end
         else if(bait_mode == 2'b10) begin
-            if(stolen == 1) begin
-                bait_mode = 2'b01;
-            end
-            else bait_mode = 2'b10;
+            bait_mode = 2'b10;
         end
         else if(bait_mode == 2'b11) begin
             if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
@@ -217,152 +299,200 @@ module final (
         
     end
 
+
     always @(posedge clk, posedge rst) begin
         if(rst == 1'b1) begin
-            fast_h_position <= 0;
-            fast_v_position <= 0;
-            fast_appear <= 0;
-            stolen <= 0;
-            fast_way <= 0;
-            fast_movetype <= 0;
-            fast_reach_top <= 0;
+            shark_h_position <= 0;
+            shark_v_position <= 0;
+            shark_appear <= 0;
+            shark_way <= 0;
+            shark_movetype <= 0;
         end
         else begin
-            fast_h_position <= n_fast_h_position;
-            fast_v_position <= n_fast_v_position;
-            fast_appear <= n_fast_appear;
-            stolen <= n_stolen;
-            fast_way <= n_fast_way;
-            fast_movetype <= n_fast_movetype;
-            fast_reach_top <= n_fast_reach_top;
+            shark_h_position <= n_shark_h_position;
+            shark_v_position <= n_shark_v_position;
+            shark_appear <= n_shark_appear;
+            shark_way <= n_shark_way;
+            shark_movetype <= n_shark_movetype;
         end
     end
 
 
 
     always @(*) begin
-        n_fast_appear = fast_appear;
-        n_fast_h_position = fast_h_position;
-        n_fast_v_position = fast_v_position;
-        n_fast_way = fast_way;
-        n_fast_movetype = fast_movetype;
-        n_stolen = 0;
-        n_fast_reach_top = fast_reach_top;
+        n_shark_appear = shark_appear;
+        n_shark_h_position = shark_h_position;
+        n_shark_v_position = shark_v_position;
+        n_shark_way = shark_way;
+        n_shark_movetype = shark_movetype;
 
-        if((playtime % 10) == 0 && playtime >= 5 && fast_appear == 0) begin
-            n_fast_v_position = fast_appear_v[fast_movetype];
-            n_fast_h_position = 850;
-            n_fast_appear = 1;
-            n_stolen = 0;
+        if((playtime % 10) == 0 && playtime >= 5 && shark_appear == 0) begin
+            n_shark_v_position = shark_appear_v[shark_movetype];
+            n_shark_h_position = 850;
+            n_shark_appear = 1;
         end
-        else if(fast_appear == 1'b1) begin
-            if(fast_way == 0) begin // 0 for left
-                if(fast_h_position == 0) begin
-                    n_fast_movetype = fast_movetype + 1;
-                    n_fast_way = ~fast_way;
-                    n_fast_appear = 0;
+        else if(shark_appear == 1'b1) begin
+            if(shark_way == 0) begin // 0 for left
+                if(shark_h_position == 0) begin
+                    n_shark_movetype = shark_movetype + 1;
+                    n_shark_way = shark_way_array[shark_movetype];
+                    n_shark_appear = 0;
                 end
                 else if(enable[0] == 1'b1) begin
 
                 end
                 else begin
-                    n_fast_h_position = fast_h_position - (cnt2 == 2000);
                     if(cnt1 == 2000) begin
-                        if(fast_reach_top == 0) begin
-                            if(fast_v_position > fast_appear_v[fast_movetype] - 5) begin
-                                n_fast_v_position = fast_v_position  - 1;
-                            end
-                            else if(fast_v_position <= fast_appear_v[fast_movetype] - 5) begin
-                                n_fast_reach_top = 1'b1;
-                                n_fast_v_position = fast_v_position  + 1;
-                            end
+                        n_shark_h_position = shark_h_position - 1;
+                        if(shark_h_position > 640) begin
+                            n_shark_v_position = shark_v_position;
                         end
-                        else if(fast_reach_top == 1) begin
-                            if(fast_v_position < fast_appear_v[fast_movetype] + 5) begin
-                                n_fast_v_position = fast_v_position  + 1;
-                            end
-                            else if(fast_v_position >= fast_appear_v[fast_movetype] + 5) begin
-                                n_fast_reach_top = 1'b0;
-                                n_fast_v_position = fast_v_position  - 1;
-                            end
-                        end 
+                        else if(shark_h_position > 580) begin
+                            n_shark_v_position = shark_v_position - 1;
+                        end
+                        else if(shark_h_position > 500) begin
+                            n_shark_v_position = shark_v_position + 1;
+                        end
+                        else if(shark_h_position > 420) begin
+                            n_shark_v_position = shark_v_position;
+                        end
+                        else if(shark_h_position > 320) begin
+                            n_shark_v_position = shark_v_position - 1;
+                        end
+                        else if(shark_h_position > 160) begin
+                            n_shark_v_position = shark_v_position + 1;
+                        end
+                        else if(shark_h_position >= 0) begin
+                            n_shark_v_position = shark_v_position - 1;
+                        end
                     end
                 end
-                if(fast_h_position <= 325 && fast_h_position >= 314
-                    && (v_position / 10) <= fast_v_position + 25 && (v_position / 10) >= fast_v_position - 5) begin
-                    n_stolen = 1;
+                if((v_position / 10) >= (shark_v_position - 15) && shark_h_position <= 400 && shark_h_position >= 279 && shark_back == 0) begin
+                    bite = 1;
+                end
+                else begin
+                    bite = 0;
                 end
             end
-            else if(fast_way == 1) begin // 0 for left
-                if(fast_h_position == 720) begin
-                    n_fast_movetype = fast_movetype + 1;
-                    n_fast_way = ~fast_way;
-                    n_fast_appear = 0;
+            else if(shark_way == 1) begin // 0 for left
+                if(shark_h_position == 760) begin
+                    n_shark_movetype = shark_movetype + 1;
+                    n_shark_way = shark_way_array[shark_movetype];
+                    n_shark_appear = 0;
                 end
                 else if(enable[0] == 1'b1) begin
 
                 end
                 else begin
-                    n_fast_h_position = fast_h_position + (cnt2 == 2000);
                     if(cnt1 == 2000) begin
-                        if(fast_reach_top == 0) begin
-                            if(fast_v_position > fast_appear_v[fast_movetype] - 5) begin
-                                n_fast_v_position = fast_v_position  - 1;
-                            end
-                            else if(fast_v_position <= fast_appear_v[fast_movetype] - 5) begin
-                                n_fast_reach_top = 1'b1;
-                                n_fast_v_position = fast_v_position  + 1;
-                            end
+                        n_shark_h_position = shark_h_position - 1;
+                        if(shark_h_position > 640) begin
+                            n_shark_v_position = shark_v_position;
                         end
-                        else if(fast_reach_top == 1) begin
-                            if(fast_v_position < fast_appear_v[fast_movetype] + 5) begin
-                                n_fast_v_position = fast_v_position  + 1;
-                            end
-                            else if(fast_v_position >= fast_appear_v[fast_movetype] + 5) begin
-                                n_fast_reach_top = 1'b0;
-                                n_fast_v_position = fast_v_position  - 1;
-                            end
-                        end 
+                        else if(shark_h_position > 580) begin
+                            n_shark_v_position = shark_v_position - 1;
+                        end
+                        else if(shark_h_position > 500) begin
+                            n_shark_v_position = shark_v_position + 1;
+                        end
+                        else if(shark_h_position > 420) begin
+                            n_shark_v_position = shark_v_position;
+                        end
+                        else if(shark_h_position > 320) begin
+                            n_shark_v_position = shark_v_position - 1;
+                        end
+                        else if(shark_h_position > 160) begin
+                            n_shark_v_position = shark_v_position + 1;
+                        end
+                        else if(shark_h_position >= 0) begin
+                            n_shark_v_position = shark_v_position - 1;
+                        end
                     end
                 end
-                if(fast_h_position <= 285 && fast_h_position >= 274
-                    && (v_position / 10) <= fast_v_position + 25 && (v_position / 10) >= fast_v_position - 5) begin
-                    n_stolen = 1;
+                if((v_position / 10) >= (shark_v_position - 15) && shark_h_position <= 400 && shark_h_position >= 279 && shark_back == 0) begin
+                    bite = 1;
+                end
+                else begin
+                    bite = 0;
                 end
             end
         end
     end
 
-    
 
     //get mouse & line color
     wire [11:0] mouse_line_color;
     wire mouse_line_back; // 1 for print background 0 for print mouse & line
-    color c0(h_position, v_position, valid, h_cnt, v_cnt, cut, cut_v, mouse_line_back, mouse_line_color);
+    color c0(h_position, v_position, valid, h_cnt, v_cnt, cut, cut_v, state, mouse_line_back, mouse_line_color);
 
-    fast fast1(h_cnt, v_cnt, fast_h_position, fast_v_position, fast_way, fast_appear, fast_back, fast_color);
+    shark shark1(h_cnt, v_cnt, shark_h_position, shark_v_position, shark_way, shark_appear, shark_back, shark_color);
 
+    wire mouth_back;
+    wire [11:0] mouth_color;
+    wire play_back;
+    wire [11:0] play_color;
+    wire pause_back;
+    wire [11:0] pause_color;
+    wire reverse_back;
+    wire [11:0] reverse_color;
+    mouth mouth1(h_cnt, v_cnt, state2_cnt, mouth_back, mouth_color);
 
-
+    play play1(h_cnt, v_cnt, play_back, play_color);
+    reverse reverse1(h_cnt, v_cnt, reverse_back, reverse_color);
+    pause pause1(h_cnt, v_cnt, pause, pause_back, pause_color);
 
 
     
     //output vga color
     always @(*) begin
         if(valid == 1'b1) begin
-            if(mouse_line_back == 1'b0) begin
-                {vgaRed, vgaGreen, vgaBlue} = mouse_line_color;
+            if(state == 2'b00) begin
+                if(mouse_line_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = mouse_line_color;
+                end
+                else if(play_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = play_color;
+                end
+                else begin
+                    {vgaRed, vgaGreen, vgaBlue} = 12'hAEF;
+                end
             end
-            else if(fast_back == 1'b0) begin
-                {vgaRed, vgaGreen, vgaBlue} = fast_color;
+            else if(state == 2'b01) begin
+                if(mouse_line_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = mouse_line_color;
+                end
+                else if(pause_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = pause_color;
+                end
+                else if(shark_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = shark_color;
+                end
+                else if(bait_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = bait_color;
+                end
+                else begin
+                    {vgaRed, vgaGreen, vgaBlue} = 12'hAEF;
+                end
             end
-            else if(bait_back == 1'b0) begin
-                {vgaRed, vgaGreen, vgaBlue} = bait_color;
+            else if(state == 2'b10) begin
+                if(mouth_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = mouth_color;
+                end
+                else begin
+                    {vgaRed, vgaGreen, vgaBlue} = 12'h000;
+                end
             end
-            else begin
-                {vgaRed, vgaGreen, vgaBlue} = 12'hAEF;
+            else if(state == 2'b11) begin
+                if(mouse_line_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = mouse_line_color;
+                end
+                else if(reverse_back == 1'b0) begin
+                    {vgaRed, vgaGreen, vgaBlue} = reverse_color;
+                end
+                else begin
+                    {vgaRed, vgaGreen, vgaBlue} = 12'hAEF;
+                end
             end
-
         end
         else begin
             {vgaRed, vgaGreen, vgaBlue} = 12'h000;
@@ -509,7 +639,7 @@ module final (
                 seg = h_position / 1000;
             end
             else begin
-                seg = 14;
+                seg = state2_cnt;
             end
         end 
 
@@ -525,7 +655,7 @@ module final (
                 seg = (h_position % 1000) / 100;
             end
             else begin
-                seg = 14;
+                seg = state;
             end
         end
 
@@ -585,3 +715,4 @@ module final (
     end
       
 endmodule
+        
