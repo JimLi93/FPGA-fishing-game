@@ -1,5 +1,3 @@
-//mouse is good but the background picture is not
-
 
 `timescale 1ns/100ps
 module clock_divide #(parameter n=27) (clk,clk_div);
@@ -35,6 +33,7 @@ module final (
 
     wire [11:0] data;
     wire clk_25MHz;
+    wire clk_29;
     wire clk_div;
     wire [16:0] pixel_addr;
     reg [16:0] tmp_pixel_addr;
@@ -66,6 +65,7 @@ module final (
 
     clock_divide #(13) div0(.clk(clk),.clk_div(clk_div));
     clock_divide #(2) div1(clk, clk_25MHz);
+    clock_divide #(29) div2(clk, clk_29);
 
     assign pixel_addr = ((h_cnt>>1)+320*(v_cnt>>1))% 76800;  //640*480 --> 320*240
 
@@ -199,22 +199,42 @@ module final (
         case(stage) 
         2'b00:begin
             DIGIT = 4'b0111;
-            seg = v_position / 1000;
+            if(clk_29 == 1) begin
+                seg = v_position / 1000;
+            end
+            else begin
+                seg = h_position / 1000;
+            end
         end 
 
         2'b01:begin
             DIGIT = 4'b1011;
-            seg = (v_position % 1000) / 100;
+            if(clk_29 == 1) begin
+                seg = (v_position % 1000) / 100;
+            end
+            else begin
+                seg = (h_position % 1000) / 100;
+            end
         end
 
         2'b10:begin
             DIGIT = 4'b1101;
-            seg = (v_position % 100) / 10;
+            if(clk_29 == 1) begin
+                seg = (v_position % 100) / 10;
+            end
+            else begin
+                seg = (h_position % 100) / 10;
+            end
         end
 
         2'b11:begin
             DIGIT = 4'b1110;
-            seg = v_position % 10;
+            if(clk_29 == 1) begin
+                seg = v_position % 10;
+            end
+            else begin
+                seg = h_position % 10;
+            end
         end
         
         endcase

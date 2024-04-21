@@ -9,7 +9,10 @@ module color (
 );
     always @(*) begin
         if(valid == 1) begin
-            if(h_cnt >= (h_position / 10)) begin
+            if(h_cnt <=258 && h_cnt >=258 && v_cnt >= 72 && v_cnt <= (v_position / 10)) begin
+                vga = 12'hfff;
+            end
+            else if(h_cnt >= (h_position / 10)) begin
                 if((h_position / 10) == h_cnt && v_cnt - (v_position / 10) < 10) begin
                     vga = 12'hfff;
                 end
