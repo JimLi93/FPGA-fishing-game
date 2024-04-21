@@ -242,3 +242,32 @@ module pause (
 
     end
 endmodule
+/*
+module bait_home (
+    input [9:0] h_cnt,
+    input [9:0] v_cnt,
+    output reg background, //1 for print background 0 for print fish
+    output reg [11:0] vga
+);
+
+    parameter [11:0] bait_home [0:719] = {//24*30
+
+    };
+
+    always @(*) begin
+        if(h_cnt >= 308 && h_cnt <= 331 && v_cnt >= 340 && v_cnt <= 369) begin
+            if(bait_home[(v_cnt - 340) * 24 + (h_cnt - 308)] != 12'hAEF) begin
+                background = 0;
+                vga = bait_home[(v_cnt - 340) * 24 + (h_cnt - 308)];
+            end
+            else begin
+                background = 1;
+                vga = 12'h000;
+            end
+        end
+        else begin
+            background = 1;
+            vga = 12'h000;
+        end
+    end
+endmodule*/

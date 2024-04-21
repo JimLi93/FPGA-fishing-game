@@ -2,7 +2,7 @@ module one_second (
     input clk,
     input rst,
     input pause,
-    input state,
+    input [1:0] state,
     output half_second,
     output one_second_enable
 );
@@ -19,7 +19,7 @@ module one_second (
     end
 
     always @(*) begin
-        if(state == 0) begin
+        if(state != 2'b01) begin
             n_cnt = 0;
         end
         else if(pause == 1'b1) begin
