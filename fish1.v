@@ -5,6 +5,7 @@ module fish1 (
     input [9:0] fish_v_position,
     input [1:0] fish_way,  //0 for go left , 1 for go right , 2 for go up
     input fish_appear, //1 for fish appear 0 for the fish doesn't exist
+    input [3:0] num,
     output reg background, //1 for print background 0 for print fish
     output reg [11:0] vga
 );
@@ -160,6 +161,152 @@ module fish1 (
                     background = 1;
                     vga = 12'h000;
                 end
+                if(((h_cnt + 40) - fish_h_position) <= 2 && (v_cnt - fish_v_position) <= 4) begin
+                    if(num == 1) begin
+                        if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 2) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 3) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 4) begin
+                        if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) <= 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 5) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 6) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 7) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 8) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                end
             end
             else begin
                 background = 1;
@@ -176,11 +323,158 @@ module fish1 (
                     background = 1;
                     vga = 12'h000;
                 end
+                if(((h_cnt + 40) - fish_h_position) <= 2 && (v_cnt - fish_v_position) <= 4) begin
+                    if(num == 1) begin
+                        if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 2) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 3) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 4) begin
+                        if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) <= 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 5) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 6) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 7) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 8) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                end
             end
             else begin
                 background = 1;
                 vga = 12'h000;
             end
+            
         end
         else if(fish_way == 2) begin
             if((v_cnt - fish_v_position) <= 79 && (fish_h_position - h_cnt) <= 32) begin
@@ -191,6 +485,152 @@ module fish1 (
                 else begin
                     background = 1;
                     vga = 12'h000;
+                end
+                if(((h_cnt + 40) - fish_h_position) <= 2 && (v_cnt - fish_v_position) <= 4) begin
+                    if(num == 1) begin
+                        if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 2) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 3) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 4) begin
+                        if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) <= 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 5) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0 && (v_cnt - fish_v_position) == 1) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 6) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2 && (v_cnt - fish_v_position) == 3) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 7) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
+                    else if(num == 8) begin
+                        if((v_cnt - fish_v_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if((v_cnt - fish_v_position) == 4) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 0) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                        else if(((h_cnt + 40) - fish_h_position) == 2) begin
+                            background = 0;
+                            vga = 12'hfff;
+                        end
+                    end
                 end
             end
             else begin
@@ -205,3 +645,4 @@ module fish1 (
     end
     
 endmodule
+

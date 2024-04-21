@@ -113,8 +113,32 @@ module bait (
             end
         end
         else begin
-            background = 1;
-            vga = 12'h000;
+            if(h_cnt >= 278 && h_cnt <= 285) begin
+                if((mouse_v / 10) <= 62) begin
+                    if(v_cnt <= 80 && v_cnt >= 62 && bait_pic_2[(v_cnt - 62) * 8 + (h_cnt - 278)] != 12'h352) begin
+                        background = 0;
+                        vga = bait_pic_2[(v_cnt - 62) * 8 + (h_cnt - 278)];
+                    end
+                    else begin
+                        background = 1;
+                        vga = 12'h000;
+                    end
+                end
+                else begin
+                    if(v_cnt <= ((mouse_v / 10) + 18) && v_cnt >= (mouse_v / 10) && bait_pic_2[(v_cnt - (mouse_v / 10)) * 8 + (h_cnt - 278)] != 12'h352) begin
+                        background = 0;
+                        vga = bait_pic_2[(v_cnt - (mouse_v / 10)) * 8 + (h_cnt - 278)];
+                    end
+                    else begin
+                        background = 1;
+                        vga = 12'h000;
+                    end
+                end
+            end
+            else begin
+                background = 1;
+                vga = 12'h000;
+            end
         end
          
     end
