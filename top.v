@@ -22,6 +22,7 @@ module final (
     inout ps2c,
     inout ps2d,
     input [3:0] sw,
+    input [1:0] in_way,
     output reg [3:0] vgaRed,
     output reg [3:0] vgaGreen,
     output reg [3:0] vgaBlue,
@@ -97,10 +98,10 @@ module final (
             //fish1_v_position1 = fish1_v_position1 + fish1_v_movement1;
             if(fish1_way1 == 2'b00) begin
                 if(fish1_h_position1 == 0) begin
-                    fish1_h_position1 = 760;
+                    fish1_h_position1 = 700;
                 end
-                else if(fish1_h_position1 <= 300 && fish1_h_position1 >= 296
-                        && (v_position / 10) <= fish1_v_position1 + 20 && (v_position / 10) >= fish1_v_position1 + 16) begin
+                else if(fish1_h_position1 <= 302 && fish1_h_position1 >= 290
+                        && (v_position / 10) <= fish1_v_position1 + 25 && (v_position / 10) >= fish1_v_position1) begin
                     fish1_way1 = 2'b10;
                     fish1_h_position1 = 276;
                     fish1_v_position1 = (v_position / 10 > 72) ? v_position / 10 : 72;
@@ -114,8 +115,8 @@ module final (
                 if(fish1_h_position1 == 720) begin
                     fish1_h_position1 = 1000;
                 end
-                else if(fish1_h_position1 <= 260 && fish1_h_position1 >= 256
-                        && (v_position / 10) <= fish1_v_position1 + 20 && (v_position / 10) >= fish1_v_position1 + 16) begin
+                else if(fish1_h_position1 <= 268 && fish1_h_position1 >= 256
+                        && (v_position / 10) <= fish1_v_position1 + 25 && (v_position / 10) >= fish1_v_position1) begin
                     fish1_way1 = 2'b10;
                     fish1_h_position1 = 276;
                     fish1_v_position1 = (v_position / 10 > 72) ? v_position / 10 : 72;
@@ -127,9 +128,12 @@ module final (
             end
             else if(fish1_way1 == 2'b10) begin
                 if(btnm[0] == 1'b1 && (v_position / 10) <= 72) begin
-                    fish1_way1 = 2'b01;
+                    fish1_way1 = in_way;
                     fish1_v_position1 = 400;
-                    fish1_h_position1 = 900;
+                    if(in_way == 0) begin
+                        fish1_h_position1 = 800;
+                    end
+                    else fish1_h_position1 = 900;
                 end
                 else begin
                     fish1_h_position1 = 276;
@@ -148,6 +152,10 @@ module final (
     wire [11:0] fish1_color;
     wire fish1_back; // 1 for print background 0 for print fish
     fish1 f1(h_cnt, v_cnt, fish1_h_position1, fish1_v_position1, fish1_way1, fish1_appear1, fish1_back, fish1_color);
+
+    wire [11:0] bait_color;
+    wire bait_back; // 1 for print background 0 for print fish
+    bait bait1(h_cnt, v_cnt, v_position, bait_back, bait_color);
     
     //output vga color
     always @(*) begin
@@ -157,6 +165,9 @@ module final (
             end
             else if(fish1_back == 1'b0) begin
                 {vgaRed, vgaGreen, vgaBlue} = fish1_color;
+            end
+            else if(bait_back == 1'b0) begin
+                {vgaRed, vgaGreen, vgaBlue} = bait_color;
             end
             else begin
                 {vgaRed, vgaGreen, vgaBlue} = pixel;
@@ -317,7 +328,7 @@ module final (
                 seg = h_position / 1000;
             end
             else begin
-                seg = 14;
+                seg = fish1_h_position1 / 1000;
             end
         end 
 
@@ -336,7 +347,7 @@ module final (
                 seg = (h_position % 1000) / 100;
             end
             else begin
-                seg = 14;
+                seg = (fish1_h_position1 % 1000) / 100;
             end
         end
 
@@ -355,7 +366,7 @@ module final (
                 seg = (h_position % 100) / 10;
             end
             else begin
-                seg = 14;
+                seg = (fish1_h_position1 % 100) / 10;
             end
         end
 
@@ -374,7 +385,7 @@ module final (
                 seg = h_position % 10;
             end
             else begin
-                seg = 14;
+                seg = fish1_h_position1 % 10;
             end
         end
         
