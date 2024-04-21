@@ -220,7 +220,7 @@ module mouth (
         else if(type == 1) begin
             if(h_cnt >= 280 && h_cnt <= 359 && v_cnt >= 172 && v_cnt <= 307) begin
                 background = 0;
-                vga = mouth[((v_cnt - 172) / 2) * 40 + ((h_cnt - 280) / 2)];
+                vga = mouth[((v_cnt - 172)>>1) * 40 + ((h_cnt - 280)>>1)];
             end
             else begin
                 background = 1;
@@ -240,7 +240,7 @@ module mouth (
         else if(type == 3) begin
             if(h_cnt >= 240 && h_cnt <= 399 && v_cnt >= 104 && v_cnt <= 375) begin
                 background = 0;
-                vga = mouth[((v_cnt - 104) / 4) * 40 + ((h_cnt - 240) / 4)];
+                vga = mouth[((v_cnt - 104)>>2) * 40 + ((h_cnt - 240)>>2)];
             end
             else begin
                 background = 1;

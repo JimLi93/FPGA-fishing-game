@@ -2,7 +2,7 @@ module bait (
     input [1:0] mode, //0 for nothing //1 for only hook // 2 for hook+bait
     input [9:0] h_cnt,
     input [9:0] v_cnt,
-    input [9:0] mouse_v,
+    input [13:0] mouse_v,
     output reg background, //1 for print background 0 for print fish
     output reg [11:0] vga
 );
@@ -58,7 +58,7 @@ module bait (
         end
         else if(mode == 2'b01) begin
             if(h_cnt >= 277 && h_cnt <= 283) begin
-                if(mouse_v <= 62) begin
+                if((mouse_v / 10) <= 62) begin
                     if(v_cnt <= 76 && v_cnt >= 62 && bait_pic[(v_cnt - 62) * 7 + (h_cnt - 277)] != 12'h352) begin
                         background = 0;
                         vga = bait_pic[(v_cnt - 62) * 7 + (h_cnt - 277)];
@@ -69,9 +69,9 @@ module bait (
                     end
                 end
                 else begin
-                    if(v_cnt <= (mouse_v + 14) && v_cnt >= mouse_v  && bait_pic[(v_cnt - mouse_v) * 7 + (h_cnt - 277))] != 12'h352) begin
+                    if(v_cnt <= ((mouse_v / 10) + 14) && v_cnt >= (mouse_v / 10) && bait_pic[(v_cnt - (mouse_v / 10)) * 7 + (h_cnt - 277)] != 12'h352) begin
                         background = 0;
-                        vga = bait_pic[(v_cnt - mouse_v) * 7 + (h_cnt - 277))];
+                        vga = bait_pic[(v_cnt - (mouse_v / 10)) * 7 + (h_cnt - 277)];
                     end
                     else begin
                         background = 1;
@@ -86,7 +86,7 @@ module bait (
         end
         else if(mode == 2'b10) begin
             if(h_cnt >= 278 && h_cnt <= 285) begin
-                if((mouse_v) <= 62) begin
+                if((mouse_v / 10) <= 62) begin
                     if(v_cnt <= 80 && v_cnt >= 62 && bait_pic_2[(v_cnt - 62) * 8 + (h_cnt - 278)] != 12'h352) begin
                         background = 0;
                         vga = bait_pic_2[(v_cnt - 62) * 8 + (h_cnt - 278)];
@@ -97,9 +97,9 @@ module bait (
                     end
                 end
                 else begin
-                    if(v_cnt <= ((mouse_v) + 18) && v_cnt >= (mouse_v) && bait_pic_2[(v_cnt - (mouse_v)) * 8 + (h_cnt - 278)] != 12'h352) begin
+                    if(v_cnt <= ((mouse_v / 10) + 18) && v_cnt >= (mouse_v / 10) && bait_pic_2[(v_cnt - (mouse_v / 10)) * 8 + (h_cnt - 278)] != 12'h352) begin
                         background = 0;
-                        vga = bait_pic_2[(v_cnt - (mouse_v)) * 8 + (h_cnt - 278)];
+                        vga = bait_pic_2[(v_cnt - (mouse_v / 10)) * 8 + (h_cnt - 278)];
                     end
                     else begin
                         background = 1;
@@ -114,7 +114,7 @@ module bait (
         end
         else begin
             if(h_cnt >= 278 && h_cnt <= 285) begin
-                if((mouse_v) <= 62) begin
+                if((mouse_v / 10) <= 62) begin
                     if(v_cnt <= 80 && v_cnt >= 62 && bait_pic_2[(v_cnt - 62) * 8 + (h_cnt - 278)] != 12'h352) begin
                         background = 0;
                         vga = bait_pic_2[(v_cnt - 62) * 8 + (h_cnt - 278)];
@@ -125,9 +125,9 @@ module bait (
                     end
                 end
                 else begin
-                    if(v_cnt <= ((mouse_v) + 18) && v_cnt >= (mouse_v) && bait_pic_2[(v_cnt - (mouse_v)) * 8 + (h_cnt - 278)] != 12'h352) begin
+                    if(v_cnt <= ((mouse_v / 10) + 18) && v_cnt >= (mouse_v / 10) && bait_pic_2[(v_cnt - (mouse_v / 10)) * 8 + (h_cnt - 278)] != 12'h352) begin
                         background = 0;
-                        vga = bait_pic_2[(v_cnt - (mouse_v)) * 8 + (h_cnt - 278)];
+                        vga = bait_pic_2[(v_cnt - (mouse_v / 10)) * 8 + (h_cnt - 278)];
                     end
                     else begin
                         background = 1;

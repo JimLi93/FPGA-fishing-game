@@ -21,17 +21,12 @@ module final (
     input rst,
     inout ps2c,
     inout ps2d,
-    input [3:0] sw,
-    input [1:0] in_way,
     input [4:0] enable,
     output reg [3:0] vgaRed,
     output reg [3:0] vgaGreen,
     output reg [3:0] vgaBlue,
     output hsync,
-    output vsync,
-    output reg [6:0] DISPLAY,
-    output reg [3:0] DIGIT,
-    output [8:0] led
+    output vsync
 );
 
     parameter total_time = 300;
@@ -59,8 +54,7 @@ module final (
 
     wire [11:0] data;
     wire clk_25MHz;
-    wire clk_div;
-    wire clk_21;
+    wire clk_23;
     wire clk_19;
     wire clk_20;
     wire [16:0] pixel_addr;
@@ -83,8 +77,6 @@ module final (
     reg [8:0] tmp1;
     reg [8:0] tmp2;
 
-    reg [3:0] seg;
-    reg [1:0] stage = 0;
 
     //for one second
     wire pause;
@@ -93,6 +85,8 @@ module final (
     assign state_tmp = enable[2];
     wire one_second_enable;
     wire half_second_enable;
+    reg [9:0] playtime;
+    reg [5:0] score = 0;
 
     reg [1:0] state, next_state; //0 for open scene 1 for playing scene 2 for shark end scene
     reg bite = 0;
@@ -174,7 +168,7 @@ module final (
     always @(*) begin
         next_state = state;
         if(state == 2'b00) begin
-            if(btnm[0] == 1'b1 && (v_position / 10) >= 335 && (v_position / 10) <= 374 && (h_position / 10) >= 290 && (h_position / 10) <= 349 && play_back == 1'b0) begin
+            if(btnm[0] == 1'b1 && v_position >= 3350 && v_position <= 3740 && h_position >= 2900 && h_position <= 3490 && play_back == 1'b0) begin
                 next_state = 2'b01;
             end
         end
@@ -187,9 +181,12 @@ module final (
             if(state2_cnt == 7) begin
                 next_state = 2'b11;
             end
+            else if(playtime == 300) begin
+                next_state = 2'b11;
+            end
         end
         else if(state == 2'b11) begin
-            if(btnm[0] == 1'b1 && (v_position / 10) >= 340 && (v_position / 10) <= 369 && (h_position / 10) >= 308 && (h_position / 10) <= 331 && reverse_back == 1'b0) begin
+            if(btnm[0] == 1'b1 && v_position >= 3400 && v_position <= 3690 && h_position >= 3080 && h_position <= 3310 && reverse_back == 1'b0) begin
                 next_state = 2'b01;
             end
         end
@@ -221,9 +218,6 @@ module final (
     one_second sc1(clk, rst, pause, state_tmp, half_second_enable, one_second_enable);
 
 
-    reg [9:0] playtime;
-    reg [5:0] score = 0;
-
     always @(posedge clk, posedge rst) begin
         if(rst == 1'b1) begin
             playtime = 0;
@@ -248,10 +242,8 @@ module final (
     
 
 
-
-    clock_divide #(13) div0(.clk(clk),.clk_div(clk_div));
     clock_divide #(2) div1(clk, clk_25MHz);
-    clock_divide #(21) div21(clk, clk_21);
+    clock_divide #(23) div23(clk, clk_23);
     clock_divide #(20) div20(clk, clk_20);
     clock_divide #(19) div19(clk, clk_19);
 
@@ -404,7 +396,7 @@ module final (
                 cut = 1;
                 cut_v = crab_v_position2;
             end
-            else if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+            else if(btnm[0] == 1'b1 && v_position <= 620) begin
                 bait_mode = 2'b10;
                 bait_cnt = 0;
                 cut = 0;
@@ -468,7 +460,7 @@ module final (
                 cut = 1;
                 cut_v = crab_v_position2;
             end
-            else if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+            else if(btnm[0] == 1'b1 && v_position <= 620) begin
                 score = score + 1;
                 bait_mode = 2'b10;
             end
@@ -508,8 +500,10 @@ module final (
         n_shark_v_position = shark_v_position;
         n_shark_way = shark_way;
         n_shark_movetype = shark_movetype;
-
-        if((playtime % 10) == 0 && playtime >= 5 && shark_appear == 0) begin
+        if(state != 2'b01) begin
+            n_shark_appear = 0;
+        end
+        else if((playtime % 10) == 0 && playtime >= 5 && shark_appear == 0) begin
             n_shark_v_position = shark_appear_v[shark_movetype];
             n_shark_h_position = 850;
             n_shark_appear = 1;
@@ -603,13 +597,16 @@ module final (
     end
 
     //crab - 1
-    always @(posedge clk_19, posedge rst) begin
+    always @(posedge clk_20, posedge rst) begin
         if(rst == 1'b1) begin
             crab_h_position1 = 700;
             crab_v_position1 = 380;
             crab_way1 = 0;
             crab_appear1 = 0;
             crab_movement1 = 0;
+        end
+        else if(state != 2'b01) begin
+            crab_appear1 = 0;
         end
         else if(playtime == 10 && crab_appear1 == 0) begin
             crab_h_position1 = 700;
@@ -643,13 +640,16 @@ module final (
     end
 
     //crab - 2
-    always @(posedge clk_19, posedge rst) begin
+    always @(posedge clk_20, posedge rst) begin
         if(rst == 1'b1) begin
             crab_h_position2 = 700;
             crab_v_position2 = 250;
             crab_way2 = 0;
             crab_appear2 = 0;
             crab_movement2 = 4;
+        end
+        else if(state != 2'b01) begin
+            crab_appear2 = 0;
         end
         else if(playtime == 12 && crab_appear2 == 0) begin
             crab_h_position2 = 700;
@@ -691,6 +691,9 @@ module final (
             fish1_movetype1 = 0;
             fish1_appear1 = 0;
         end
+        else if(state != 2'b01) begin
+            fish1_appear1 = 0;
+        end
         else if(playtime == 0) begin
             fish1_v_position1 = fish_appear_v[1];
             fish1_h_position1 = 900;
@@ -711,7 +714,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position1 + 25 && (v_position / 10) >= fish1_v_position1 - 5) begin
                         fish1_way1 = 2'b10;
                         fish1_h_position1 = 298;
-                        fish1_v_position1 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position1 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position1 = fish1_h_position1;
@@ -737,7 +740,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position1 + 25 && (v_position / 10) >= fish1_v_position1 - 5) begin
                         fish1_way1 = 2'b10;
                         fish1_h_position1 = 298;
-                        fish1_v_position1 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position1 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position1 = fish1_h_position1;
@@ -753,15 +756,18 @@ module final (
                     end
                 end
                 else if(fish1_way1 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position1 = 850;
                         fish1_movetype1 = fish1_movetype1 + 1;
                         fish1_way1 = fish_way1[fish1_movetype1];
                         fish1_v_position1 = fish_appear_v[fish1_movetype1];
                     end
+                    else if(cut == 1) begin
+                        fish1_way1 = 0;
+                    end
                     else begin
                         fish1_h_position1 = 298;
-                        fish1_v_position1 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position1 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -807,15 +813,18 @@ module final (
                     end
                 end
                 else if(fish1_way1 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position1 = 850;
                         fish1_movetype1 = fish1_movetype1 + 1;
                         fish1_way1 = fish_way1[fish1_movetype1];
                         fish1_v_position1 = fish_appear_v[fish1_movetype1];
                     end
+                    else if(cut == 1) begin
+                        fish1_way1 = 0;
+                    end
                     else begin
                         fish1_h_position1 = 298;
-                        fish1_v_position1 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position1 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -828,6 +837,9 @@ module final (
             fish1_h_position2 = 400;
             fish1_way2 = 0;
             fish1_movetype2 = 0;
+            fish1_appear2 = 0;
+        end
+        else if(state != 2'b01) begin
             fish1_appear2 = 0;
         end
         else if(playtime == 3) begin
@@ -850,7 +862,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position2 + 25 && (v_position / 10) >= fish1_v_position2 - 5) begin
                         fish1_way2 = 2'b10;
                         fish1_h_position2 = 298;
-                        fish1_v_position2 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position2 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position2 = fish1_h_position2;
@@ -876,7 +888,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position2 + 25 && (v_position / 10) >= fish1_v_position2 - 5) begin
                         fish1_way2 = 2'b10;
                         fish1_h_position2 = 298;
-                        fish1_v_position2 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position2 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position2 = fish1_h_position2;
@@ -892,15 +904,18 @@ module final (
                     end
                 end
                 else if(fish1_way2 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position2 = 850;
                         fish1_movetype2 = fish1_movetype2 + 7;
                         fish1_way2 = fish_way2[fish1_movetype2];
                         fish1_v_position2 = fish_appear_v[fish1_movetype2];
                     end
+                    else if(cut == 1) begin
+                        fish1_way2 = 0;
+                    end
                     else begin
                         fish1_h_position2 = 298;
-                        fish1_v_position2 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position2 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -946,15 +961,18 @@ module final (
                     end
                 end
                 else if(fish1_way2 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position2 = 850;
                         fish1_movetype2 = fish1_movetype2 + 7;
                         fish1_way2 = fish_way2[fish1_movetype2];
                         fish1_v_position2 = fish_appear_v[fish1_movetype2];
                     end
+                    else if(cut == 1) begin
+                        fish1_way2 = 0;
+                    end
                     else begin
                         fish1_h_position2 = 298;
-                        fish1_v_position2 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position2 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -967,6 +985,9 @@ module final (
             fish1_h_position3 = 400;
             fish1_way3 = 0;
             fish1_movetype3 = 0;
+            fish1_appear3 = 0;
+        end
+        else if(state != 2'b01) begin
             fish1_appear3 = 0;
         end
         else if(playtime == 5) begin
@@ -989,7 +1010,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position3 + 25 && (v_position / 10) >= fish1_v_position3 - 5) begin
                         fish1_way3 = 2'b10;
                         fish1_h_position3 = 298;
-                        fish1_v_position3 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position3 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position3 = fish1_h_position3;
@@ -1015,7 +1036,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position3 + 25 && (v_position / 10) >= fish1_v_position3 - 5) begin
                         fish1_way3 = 2'b10;
                         fish1_h_position3 = 298;
-                        fish1_v_position3 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position3 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position3 = fish1_h_position3;
@@ -1031,15 +1052,18 @@ module final (
                     end
                 end
                 else if(fish1_way3 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position3 = 850;
                         fish1_movetype3 = fish1_movetype3 + 3;
                         fish1_way3 = fish_way3[fish1_movetype3];
                         fish1_v_position3 = fish_appear_v[fish1_movetype3];
                     end
+                    else if(cut == 1) begin
+                        fish1_way3 = 0;
+                    end
                     else begin
                         fish1_h_position3 = 298;
-                        fish1_v_position3 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position3 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -1085,15 +1109,18 @@ module final (
                     end
                 end
                 else if(fish1_way3 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position3 = 850;
                         fish1_movetype3 = fish1_movetype3 + 3;
                         fish1_way3 = fish_way3[fish1_movetype3];
                         fish1_v_position3 = fish_appear_v[fish1_movetype3];
                     end
+                    else if(cut == 1) begin
+                        fish1_way3 = 0;
+                    end
                     else begin
                         fish1_h_position3 = 298;
-                        fish1_v_position3 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position3 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -1106,6 +1133,9 @@ module final (
             fish1_h_position4 = 400;
             fish1_way4 = 0;
             fish1_movetype4 = 0;
+            fish1_appear4 = 0;
+        end
+        else if(state != 2'b01) begin
             fish1_appear4 = 0;
         end
         else if(playtime == 7) begin
@@ -1128,7 +1158,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position4 + 25 && (v_position / 10) >= fish1_v_position4 - 5) begin
                         fish1_way4 = 2'b10;
                         fish1_h_position4 = 298;
-                        fish1_v_position4 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position4 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position4 = fish1_h_position4;
@@ -1154,7 +1184,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position4 + 25 && (v_position / 10) >= fish1_v_position4 - 5) begin
                         fish1_way4 = 2'b10;
                         fish1_h_position4 = 298;
-                        fish1_v_position4 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position4 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position4 = fish1_h_position4;
@@ -1170,15 +1200,18 @@ module final (
                     end
                 end
                 else if(fish1_way4 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position4 = 850;
                         fish1_movetype4 = fish1_movetype4 + 1;
                         fish1_way4 = fish_way4[fish1_movetype4];
                         fish1_v_position4 = fish_appear_v[fish1_movetype4];
                     end
+                    else if(cut == 1) begin
+                        fish1_way4 = 0;
+                    end
                     else begin
                         fish1_h_position4 = 298;
-                        fish1_v_position4 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position4 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -1224,15 +1257,18 @@ module final (
                     end
                 end
                 else if(fish1_way4 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position4 = 850;
                         fish1_movetype4 = fish1_movetype4 + 1;
                         fish1_way4 = fish_way4[fish1_movetype4];
                         fish1_v_position4 = fish_appear_v[fish1_movetype4];
                     end
+                    else if(cut == 1) begin
+                        fish1_way4 = 0;
+                    end
                     else begin
                         fish1_h_position4 = 298;
-                        fish1_v_position4 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position4 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -1245,6 +1281,9 @@ module final (
             fish1_h_position5 = 400;
             fish1_way5 = 0;
             fish1_movetype5 = 0;
+            fish1_appear5 = 0;
+        end
+        else if(state != 2'b01) begin
             fish1_appear5 = 0;
         end
         else if(playtime == 10) begin
@@ -1267,7 +1306,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position5 + 25 && (v_position / 10) >= fish1_v_position5 - 5) begin
                         fish1_way5 = 2'b10;
                         fish1_h_position5 = 298;
-                        fish1_v_position5 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position5 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position5 = fish1_h_position5;
@@ -1293,7 +1332,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position5 + 25 && (v_position / 10) >= fish1_v_position5 - 5) begin
                         fish1_way5 = 2'b10;
                         fish1_h_position5 = 298;
-                        fish1_v_position5 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position5 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position5 = fish1_h_position5;
@@ -1309,15 +1348,18 @@ module final (
                     end
                 end
                 else if(fish1_way5 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position5 = 850;
                         fish1_movetype5 = fish1_movetype5 + 5;
                         fish1_way5 = fish_way5[fish1_movetype5];
                         fish1_v_position5 = fish_appear_v[fish1_movetype5];
                     end
+                    else if(cut == 1) begin
+                        fish1_way5 = 5;
+                    end
                     else begin
                         fish1_h_position5 = 298;
-                        fish1_v_position5 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position5 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -1363,15 +1405,18 @@ module final (
                     end
                 end
                 else if(fish1_way5 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position5 = 850;
                         fish1_movetype5 = fish1_movetype5 + 5;
                         fish1_way5 = fish_way5[fish1_movetype5];
                         fish1_v_position5 = fish_appear_v[fish1_movetype5];
                     end
+                    else if(cut == 1) begin
+                        fish1_way5 = 0;
+                    end
                     else begin
                         fish1_h_position5 = 298;
-                        fish1_v_position5 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position5 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -1384,6 +1429,9 @@ module final (
             fish1_h_position6 = 400;
             fish1_way6 = 0;
             fish1_movetype6 = 0;
+            fish1_appear6 = 0;
+        end
+        else if(state != 2'b01) begin
             fish1_appear6 = 0;
         end
         else if(playtime == 13) begin
@@ -1406,7 +1454,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position6 + 25 && (v_position / 10) >= fish1_v_position6 - 5) begin
                         fish1_way6 = 2'b10;
                         fish1_h_position6 = 298;
-                        fish1_v_position6 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position6 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position6 = fish1_h_position6;
@@ -1432,7 +1480,7 @@ module final (
                             && (v_position / 10) <= fish1_v_position6 + 25 && (v_position / 10) >= fish1_v_position6 - 5) begin
                         fish1_way6 = 2'b10;
                         fish1_h_position6 = 298;
-                        fish1_v_position6 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position6 = (v_position > 620) ? v_position / 10 : 62;
                     end
                     else if(enable[0] == 1'b1) begin
                         fish1_h_position6 = fish1_h_position6;
@@ -1448,15 +1496,18 @@ module final (
                     end
                 end
                 else if(fish1_way6 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position6 = 850;
                         fish1_movetype6 = fish1_movetype6 + 5;
                         fish1_way6 = fish_way6[fish1_movetype6];
                         fish1_v_position6 = fish_appear_v[fish1_movetype6];
                     end
+                    else if(cut == 1) begin
+                        fish1_way6 = 0;
+                    end
                     else begin
                         fish1_h_position6 = 298;
-                        fish1_v_position6 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position6 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -1502,15 +1553,18 @@ module final (
                     end
                 end
                 else if(fish1_way6 == 2'b10) begin
-                    if(btnm[0] == 1'b1 && (v_position / 10) <= 62) begin
+                    if(btnm[0] == 1'b1 && v_position <= 620) begin
                         fish1_h_position6 = 850;
                         fish1_movetype6 = fish1_movetype6 + 5;
                         fish1_way6 = fish_way6[fish1_movetype6];
                         fish1_v_position6 = fish_appear_v[fish1_movetype6];
                     end
+                    else if(cut == 1) begin
+                        fish1_way6 = 0;
+                    end
                     else begin
                         fish1_h_position6 = 298;
-                        fish1_v_position6 = (v_position / 10 > 62) ? v_position / 10 : 62;
+                        fish1_v_position6 = (v_position > 620) ? v_position / 10 : 62;
                     end
                 end
             end
@@ -1547,8 +1601,10 @@ module final (
         n_fast_movetype = fast_movetype;
         n_stolen = 0;
         n_fast_reach_top = fast_reach_top;
-
-        if((playtime % 10) == 0 && playtime >= 5 && fast_appear == 0) begin
+        if(state != 2'b01) begin
+            n_fast_appear = 0;
+        end
+        else if((playtime % 10) == 0 && playtime >= 5 && fast_appear == 0) begin
             n_fast_v_position = fast_appear_v[fast_movetype];
             n_fast_h_position = 850;
             n_fast_appear = 1;
@@ -1588,7 +1644,7 @@ module final (
                     end
                 end
                 if(fast_h_position <= 325 && fast_h_position >= 314
-                    && (v_position / 10) <= fast_v_position + 25 && (v_position / 10) >= fast_v_position - 5) begin
+                    && (v_position / 10) <= fast_v_position + 25 && (v_position / 10) >= fast_v_position - 5 && bait_mode == 2'b10) begin
                     n_stolen = 1;
                 end
             end
@@ -1625,7 +1681,7 @@ module final (
                     end
                 end
                 if(fast_h_position <= 285 && fast_h_position >= 274
-                    && (v_position / 10) <= fast_v_position + 25 && (v_position / 10) >= fast_v_position - 5) begin
+                    && (v_position / 10) <= fast_v_position + 25 && (v_position / 10) >= fast_v_position - 5 && bait_mode == 2'b10) begin
                     n_stolen = 1;
                 end
             end
@@ -1765,8 +1821,21 @@ module final (
         end
     end
 
+    reg [8:0] position;
+      //640*480 --> 320*240
+    assign pixel_addr = (v_cnt >= 150) ? (h_cnt>>1)+320*(v_cnt>>1)% 76800 : 
+    (((h_cnt>>1) + position) >=320) ?  ( ( (h_cnt>>1) + position - 320 )+320*(v_cnt>>1))% 76800 : ( ( (h_cnt>>1) + position )+320*(v_cnt>>1))% 76800;
 
-    assign pixel_addr = ((h_cnt>>1)+320*(v_cnt>>1))% 76800;  //640*480 --> 320*240
+    always@(posedge clk_23, posedge rst) begin
+        if(rst)
+            position <= 0;
+        else begin
+            if(position < 319)
+                position <= position + 1;
+            else
+                position <= 0;
+        end
+    end
     
 
     mouse mouse_unit1  
@@ -1889,102 +1958,6 @@ module final (
         .h_cnt(h_cnt),
         .v_cnt(v_cnt)
     );
-
-
-
-
-    always @(posedge clk_div) begin
-        stage <= stage + 1'b1;
-    end
-
-    always @(*) begin
-        case(stage) 
-        2'b00:begin
-            DIGIT = 4'b0111;
-            if(sw[3] == 1'b1) begin
-                seg = 0;
-            end
-            else if(sw == 4'b0000) begin
-                seg = v_position / 1000;
-            end
-            else if(sw == 4'b0001) begin
-                seg = h_position / 1000;
-            end
-            else begin
-                seg = state2_cnt;
-            end
-        end 
-
-        2'b01:begin
-            DIGIT = 4'b1011;
-            if(sw[3] == 1'b1) begin
-                seg = (total_time - playtime) / 60;
-            end
-            else if(sw == 4'b0000) begin
-                seg = (v_position % 1000) / 100;
-            end
-            else if(sw == 4'b0001) begin
-                seg = (h_position % 1000) / 100;
-            end
-            else begin
-                seg = state;
-            end
-        end
-
-        2'b10:begin
-            DIGIT = 4'b1101;
-            if(sw[3] == 1'b1) begin
-                seg = ((total_time - playtime) % 60) / 10;
-            end
-            else if(sw == 4'b0000) begin
-                seg = (v_position % 100) / 10;
-            end
-            else if(sw == 4'b0001) begin
-                seg = (h_position % 100) / 10;
-            end
-            else begin
-                seg = score / 10;
-            end
-        end
-
-        2'b11:begin
-            DIGIT = 4'b1110;
-            if(sw[3] == 1'b1) begin
-                seg = (total_time - playtime) % 10;
-            end
-            else if(sw == 4'b0000) begin
-                seg = v_position % 10;
-            end
-            else if(sw == 4'b0001) begin
-                seg = h_position % 10;
-            end
-            else begin
-                seg = score % 10;
-            end
-        end
-        
-        endcase
-    end
-
-    always @(*) begin
-        case(seg)
-        4'b0000: DISPLAY = 7'b1000000; //0 64
-        4'b0001: DISPLAY = 7'b1111001; //1 121 
-        4'b0010: DISPLAY = 7'b0100100; //2 36
-        4'b0011: DISPLAY = 7'b0110000; //3 48
-        4'b0100: DISPLAY = 7'b0011001; //4 25
-        4'b0101: DISPLAY = 7'b0010010; //5 18
-        4'b0110: DISPLAY = 7'b0000010; //6 2
-        4'b0111: DISPLAY = 7'b1111000; //7 120
-        4'b1000: DISPLAY = 7'b0000000; //8 0
-        4'b1001: DISPLAY = 7'b0010000; //9 16
-        4'b1010: DISPLAY = 7'b0001000; //10 A
-        4'b1011: DISPLAY = 7'b0010010; //11 S
-        4'b1100: DISPLAY = 7'b1000110; //12 C
-        4'b1101: DISPLAY = 7'b0111111; //13 -
-        default: DISPLAY = 7'b1111111;
-        endcase
-    end
       
 endmodule
         
