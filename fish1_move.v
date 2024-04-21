@@ -13,7 +13,7 @@ module fish1_move (
     reg [23:0] cnt;
     reg [23:0] n_cnt;
 
-    parameter max = 1000000;
+    parameter max = 2000000; //12sec
 
     always @(posedge clk, posedge rst) begin
         if(rst == 1'b1) begin
@@ -26,7 +26,7 @@ module fish1_move (
 
     always @(*) begin
         vm = 0;
-        if(cnt >= 1000000) begin
+        if(cnt >= 2000000) begin
             n_cnt = 0;
             hm = 1;
         end

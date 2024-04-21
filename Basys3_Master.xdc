@@ -23,6 +23,17 @@ set_property IOSTANDARD LVCMOS33 [get_ports {sw[2]}]
 set_property PACKAGE_PIN R2 [get_ports {sw[3]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {sw[3]}]
 
+set_property PACKAGE_PIN W16 [get_ports {enable[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {enable[0]}]
+set_property PACKAGE_PIN W17 [get_ports {enable[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {enable[1]}]
+set_property PACKAGE_PIN W15 [get_ports {enable[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {enable[2]}]
+set_property PACKAGE_PIN V15 [get_ports {enable[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {enable[3]}]
+set_property PACKAGE_PIN W14 [get_ports {enable[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {enable[4]}]
+
 
 ## LEDs
 set_property PACKAGE_PIN U16 [get_ports {led[0]}]

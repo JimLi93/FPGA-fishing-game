@@ -4,13 +4,19 @@ module color (
     input valid,
     input [9:0] h_cnt,
     input [9:0] v_cnt,
+    input cut,
+    input [9:0] cut_v,
     output reg background,
     output reg [11:0] vga
 );
     always @(*) begin
         if(valid == 1) begin
-            if(h_cnt <=258 && h_cnt >=258 && v_cnt >= 72 && v_cnt <= (v_position / 10)) begin
-                vga = 12'hfff;
+            if(cut == 1'b1 && h_cnt <=279 && h_cnt >=279 && v_cnt >= 62 && v_cnt <= cut_v) begin
+                vga = 12'h000;
+                background = 0;
+            end
+            else if(cut == 1'b0 && h_cnt <=279 && h_cnt >=279 && v_cnt >= 62 && v_cnt <= (v_position / 10)) begin
+                vga = 12'h000;
                 background = 0;
             end
             else if(h_cnt >= (h_position / 10)) begin

@@ -32,6 +32,6 @@ module one_second (
         end
     end
 
-    assign one_second_enable = (cnt == 99999999) ? 1'b1 : 1'b0;
+    assign one_second_enable = (cnt >= 99999999) ? 1'b1 : 1'b0;
 
 endmodule
