@@ -1,4 +1,4 @@
-
+//movetype need to be rewrite as cnt[5:3]
 `timescale 1ns/100ps
 module clock_divide #(parameter n=27) (clk,clk_div);
     
@@ -21,9 +21,10 @@ module final (
     input rst,
     inout ps2c,
     inout ps2d,
-    output [3:0] vgaRed,
-    output [3:0] vgaGreen,
-    output [3:0] vgaBlue,
+    input [3:0] sw,
+    output reg [3:0] vgaRed,
+    output reg [3:0] vgaGreen,
+    output reg [3:0] vgaBlue,
     output hsync,
     output vsync,
     output reg [6:0] DISPLAY,
@@ -33,8 +34,8 @@ module final (
 
     wire [11:0] data;
     wire clk_25MHz;
-    wire clk_29;
     wire clk_div;
+    wire clk_21;
     wire [16:0] pixel_addr;
     reg [16:0] tmp_pixel_addr;
     wire [11:0] pixel;
@@ -59,13 +60,114 @@ module final (
     reg [3:0] seg;
     reg [1:0] stage = 0;
 
-    
-    color c0(h_position, v_position, valid, h_cnt, v_cnt, pixel, {vgaRed, vgaGreen, vgaBlue});
-    
-
     clock_divide #(13) div0(.clk(clk),.clk_div(clk_div));
     clock_divide #(2) div1(clk, clk_25MHz);
-    clock_divide #(29) div2(clk, clk_29);
+    clock_divide #(21) div21(clk, clk_21);
+
+    reg [5:0] cnt;
+    reg [7:0] fish_way = 8'b10110010; 
+
+    always @(posedge clk, posedge rst) begin
+        if(rst == 1'b1) begin
+            cnt = 0;
+        end
+        else begin
+            cnt = cnt + 1;
+        end
+    end
+
+    //fish1
+    reg [2:0] fish1_amount;
+    reg fish1_appear1 = 1;
+    reg [9:0] fish1_h_position1 = 400;
+    reg [9:0] fish1_v_position1 = 320;
+    wire [2:0] fish1_h_movement1;
+    wire [2:0] fish1_v_movement1;
+    reg [1:0] fish1_way1 = 0;
+    reg [2:0] fish1_movetype1 = 0;
+    fish1_move f1_move1(clk, rst, fish1_h_position1, fish1_v_position1, fish1_way1, fish1_appear1 ,fish1_movetype1, v_position, fish1_h_movement1, fish1_v_movement1);
+
+    always @(posedge clk, posedge rst) begin
+        if(rst == 1'b1) begin
+            fish1_v_position1 = 320;
+            fish1_h_position1 = 400;
+            fish1_way1 = 0;
+        end
+        else begin
+            //fish1_v_position1 = fish1_v_position1 + fish1_v_movement1;
+            if(fish1_way1 == 2'b00) begin
+                if(fish1_h_position1 == 0) begin
+                    fish1_h_position1 = 760;
+                end
+                else if(fish1_h_position1 <= 300 && fish1_h_position1 >= 296
+                        && (v_position / 10) <= fish1_v_position1 + 20 && (v_position / 10) >= fish1_v_position1 + 16) begin
+                    fish1_way1 = 2'b10;
+                    fish1_h_position1 = 276;
+                    fish1_v_position1 = (v_position / 10 > 72) ? v_position / 10 : 72;
+                end
+                else if(sw[2] == 1'b1) begin
+                    fish1_h_position1 = fish1_h_position1;
+                end
+                else fish1_h_position1 = fish1_h_position1 - fish1_h_movement1;
+            end
+            else if(fish1_way1 == 2'b01) begin
+                if(fish1_h_position1 == 720) begin
+                    fish1_h_position1 = 1000;
+                end
+                else if(fish1_h_position1 <= 260 && fish1_h_position1 >= 256
+                        && (v_position / 10) <= fish1_v_position1 + 20 && (v_position / 10) >= fish1_v_position1 + 16) begin
+                    fish1_way1 = 2'b10;
+                    fish1_h_position1 = 276;
+                    fish1_v_position1 = (v_position / 10 > 72) ? v_position / 10 : 72;
+                end
+                else if(sw[2] == 1'b1) begin
+                    fish1_h_position1 = fish1_h_position1;
+                end
+                else fish1_h_position1 = fish1_h_position1 + fish1_h_movement1;
+            end
+            else if(fish1_way1 == 2'b10) begin
+                if(btnm[0] == 1'b1 && (v_position / 10) <= 72) begin
+                    fish1_way1 = 2'b01;
+                    fish1_v_position1 = 400;
+                    fish1_h_position1 = 900;
+                end
+                else begin
+                    fish1_h_position1 = 276;
+                    fish1_v_position1 = (v_position / 10 > 72) ? v_position / 10 : 72;
+                end
+            end
+        end
+    end
+    
+    //get mouse & line color
+    wire [11:0] mouse_line_color;
+    wire mouse_line_back; // 1 for print background 0 for print mouse & line
+    color c0(h_position, v_position, valid, h_cnt, v_cnt, mouse_line_back, mouse_line_color);
+
+    //get fish color
+    wire [11:0] fish1_color;
+    wire fish1_back; // 1 for print background 0 for print fish
+    fish1 f1(h_cnt, v_cnt, fish1_h_position1, fish1_v_position1, fish1_way1, fish1_appear1, fish1_back, fish1_color);
+    
+    //output vga color
+    always @(*) begin
+        if(valid == 1'b1) begin
+            if(mouse_line_back == 1'b0) begin
+                {vgaRed, vgaGreen, vgaBlue} = mouse_line_color;
+            end
+            else if(fish1_back == 1'b0) begin
+                {vgaRed, vgaGreen, vgaBlue} = fish1_color;
+            end
+            else begin
+                {vgaRed, vgaGreen, vgaBlue} = pixel;
+            end
+
+        end
+        else begin
+            {vgaRed, vgaGreen, vgaBlue} = 12'h000;
+        end
+    end
+
 
     assign pixel_addr = ((h_cnt>>1)+320*(v_cnt>>1))% 76800;  //640*480 --> 320*240
 
@@ -191,6 +293,9 @@ module final (
         .v_cnt(v_cnt)
     );
 
+
+
+
     always @(posedge clk_div) begin
         stage <= stage + 1'b1;
     end
@@ -199,41 +304,77 @@ module final (
         case(stage) 
         2'b00:begin
             DIGIT = 4'b0111;
-            if(clk_29 == 1) begin
+            if(sw == 4'b0000) begin
+                seg = fish1_v_position1 / 1000;
+            end
+            else if(sw == 4'b0001) begin
+                seg = fish1_h_position1 / 1000;
+            end
+            else if(sw == 4'b0010) begin
                 seg = v_position / 1000;
             end
-            else begin
+            else if(sw == 4'b0011) begin
                 seg = h_position / 1000;
+            end
+            else begin
+                seg = 14;
             end
         end 
 
         2'b01:begin
             DIGIT = 4'b1011;
-            if(clk_29 == 1) begin
+            if(sw == 4'b0000) begin
+                seg = (fish1_v_position1 % 1000) / 100;
+            end
+            else if(sw == 4'b0001) begin
+                seg = (fish1_h_position1 % 1000) / 100;
+            end
+            else if(sw == 4'b0010) begin
                 seg = (v_position % 1000) / 100;
             end
-            else begin
+            else if(sw == 4'b0011) begin
                 seg = (h_position % 1000) / 100;
+            end
+            else begin
+                seg = 14;
             end
         end
 
         2'b10:begin
             DIGIT = 4'b1101;
-            if(clk_29 == 1) begin
+            if(sw == 4'b0000) begin
+                seg = (fish1_v_position1 % 100) / 10;
+            end
+            else if(sw == 4'b0001) begin
+                seg = (fish1_h_position1 % 100) / 10;
+            end
+            else if(sw == 4'b0010) begin
                 seg = (v_position % 100) / 10;
             end
-            else begin
+            else if(sw == 4'b0011) begin
                 seg = (h_position % 100) / 10;
+            end
+            else begin
+                seg = 14;
             end
         end
 
         2'b11:begin
             DIGIT = 4'b1110;
-            if(clk_29 == 1) begin
+            if(sw == 4'b0000) begin
+                seg = fish1_v_position1 % 10;
+            end
+            else if(sw == 4'b0001) begin
+                seg = fish1_h_position1 % 10;
+            end
+            else if(sw == 4'b0010) begin
                 seg = v_position % 10;
             end
-            else begin
+            else if(sw == 4'b0011) begin
                 seg = h_position % 10;
+            end
+            else begin
+                seg = 14;
             end
         end
         
